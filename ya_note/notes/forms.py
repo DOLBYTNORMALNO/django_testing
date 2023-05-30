@@ -5,7 +5,7 @@ from django.core.exceptions import ValidationError
 
 from .models import Note
 
-WARNING = ' - такой slug уже существует, придумайте уникальное значение!'
+WARNING = " - такой slug уже существует, придумайте уникальное значение!"
 
 
 class NoteForm(forms.ModelForm):
@@ -13,17 +13,19 @@ class NoteForm(forms.ModelForm):
 
     class Meta:
         model = Note
-        fields = ('title', 'text', 'slug')
+        fields = ("title", "text", "slug")
 
     def clean_slug(self):
         """Обрабатывает случай, если slug не уникален."""
         cleaned_data = super().clean()
-        slug = cleaned_data.get('slug')
+        slug = cleaned_data.get("slug")
         if not slug:
-            title = cleaned_data.get('title')
+            title = cleaned_data.get("title")
             slug = slugify(title)[:100]
-        if Note.objects.filter(
-                slug=slug
-        ).exclude(id=self.instance.pk).exists():
+        if (
+            Note.objects.filter(slug=slug)
+            .exclude(id=self.instance.pk)
+            .exists()
+        ):
             raise ValidationError(slug + WARNING)
         return slug
