@@ -47,7 +47,7 @@ def test_comments_order(client):
 
 @pytest.mark.django_db
 def test_comment_form_availability(client):
-    user = User.objects.create_user(username="testuser", password="12345")
+    User.objects.create_user(username="testuser", password="12345")
     news = News.objects.create(title="Test News", text="Test News content")
     response = client.get(reverse("news:detail", kwargs={"pk": news.pk}))
     assert "form" not in response.context

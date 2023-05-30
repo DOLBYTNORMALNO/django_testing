@@ -28,7 +28,7 @@ def test_anonymous_user_cannot_edit_or_delete_comment(client):
 @pytest.mark.django_db
 def test_user_cannot_edit_or_delete_other_comments(client):
     user1 = User.objects.create_user(username="testuser", password="12345")
-    user2 = User.objects.create_user(username="otheruser", password="12345")
+    User.objects.create_user(username="otheruser", password="12345")
     client.login(username="otheruser", password="12345")
     news = News.objects.create(title="Test News", text="Test News content")
     comment = Comment.objects.create(

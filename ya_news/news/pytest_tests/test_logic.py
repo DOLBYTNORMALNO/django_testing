@@ -21,7 +21,7 @@ def test_anonymous_user_cannot_comment(client):
 
 @pytest.mark.django_db
 def test_authorized_user_can_comment(client):
-    user = User.objects.create_user(username="testuser", password="12345")
+    User.objects.create_user(username="testuser", password="12345")
     news = News.objects.create(title="Test News", text="Test News content")
     client.login(username="testuser", password="12345")
     response = client.post(
@@ -34,7 +34,7 @@ def test_authorized_user_can_comment(client):
 
 @pytest.mark.django_db
 def test_comment_with_forbidden_words_not_published(client):
-    user = User.objects.create_user(username="testuser", password="12345")
+    User.objects.create_user(username="testuser", password="12345")
     news = News.objects.create(title="Test News", text="Test News content")
     client.login(username="testuser", password="12345")
     response = client.post(
@@ -55,7 +55,7 @@ def test_authorized_user_can_edit_own_comment(client):
     )
     client.login(username="testuser", password="12345")
     new_comment_text = "Updated Comment"
-    response = client.post(
+    client.post(
         reverse("news:edit", kwargs={"pk": comment.pk}),
         data={"text": new_comment_text},
     )
@@ -66,7 +66,7 @@ def test_authorized_user_can_edit_own_comment(client):
 @pytest.mark.django_db
 def test_authorized_user_cannot_edit_or_delete_others_comments(client):
     user1 = User.objects.create_user(username="testuser1", password="12345")
-    user2 = User.objects.create_user(username="testuser2", password="12345")
+    User.objects.create_user(username="testuser2", password="12345")
     news = News.objects.create(title="Test News", text="Test News content")
     comment = Comment.objects.create(
         news=news, author=user1, text="Test Comment"
@@ -74,7 +74,7 @@ def test_authorized_user_cannot_edit_or_delete_others_comments(client):
     client.login(username="testuser2", password="12345")
 
     new_comment_text = "Unauthorized Update Attempt"
-    response = client.post(
+    client.post(
         reverse("news:edit", kwargs={"pk": comment.pk}),
         data={"text": new_comment_text},
     )
@@ -82,5 +82,5 @@ def test_authorized_user_cannot_edit_or_delete_others_comments(client):
     assert comment.text != new_comment_text
 
     initial_count = Comment.objects.count()
-    response = client.post(reverse("news:delete", kwargs={"pk": comment.pk}))
+    client.post(reverse("news:delete", kwargs={"pk": comment.pk}))
     assert Comment.objects.count() == initial_count
