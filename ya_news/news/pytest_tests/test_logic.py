@@ -64,7 +64,7 @@ def test_comment_with_forbidden_words_not_published(
     response = client.post(
         reverse(NEWS_DETAIL, kwargs={"pk": news_fixture.pk}),
         data={
-            "text": f"Test Comment with forbidden word { random.choice(BAD_WORDS)}"
+            "text": f"Test Comment with { random.choice(BAD_WORDS)}"
         },
     )
     assert response.status_code == 200
