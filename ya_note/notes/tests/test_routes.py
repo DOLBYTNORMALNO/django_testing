@@ -8,6 +8,12 @@ from notes.models import Note
 User = get_user_model()
 
 
+NOTES_ADD = "notes:add"
+NOTES_EDIT = "notes:edit"
+NOTES_DELETE = "notes:delete"
+USERS_LOGIN = "users:login"
+
+
 class RoutesTest(TestCase):
     def setUp(self):
         self.client = Client()
@@ -28,7 +34,7 @@ class RoutesTest(TestCase):
         response = self.client.get(reverse("notes:success"))
         self.assertEqual(response.status_code, 200)
 
-        response = self.client.get(reverse("notes:add"))
+        response = self.client.get(reverse(NOTES_ADD))
         self.assertEqual(response.status_code, 200)
 
     def test_note_page_access(self):
@@ -43,24 +49,31 @@ class RoutesTest(TestCase):
         self.assertEqual(response.status_code, 200)
 
         response = self.client.get(
-            reverse("notes:edit", kwargs={"slug": note.slug})
+            reverse(NOTES_EDIT, kwargs={"slug": note.slug})
         )
         self.assertEqual(response.status_code, 200)
 
         response = self.client.get(
-            reverse("notes:delete", kwargs={"slug": note.slug})
+            reverse(NOTES_DELETE, kwargs={"slug": note.slug})
         )
         self.assertEqual(response.status_code, 200)
 
     def test_unauthorized_user_redirected(self):
+        expected_url = reverse(USERS_LOGIN)
         response = self.client.get(reverse("notes:list"))
-        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(
+            response, expected_url + "?next=" + reverse("notes:list")
+        )
 
         response = self.client.get(reverse("notes:success"))
-        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(
+            response, expected_url + "?next=" + reverse("notes:success")
+        )
 
-        response = self.client.get(reverse("notes:add"))
-        self.assertEqual(response.status_code, 302)
+        response = self.client.get(reverse(NOTES_ADD))
+        self.assertRedirects(
+            response, expected_url + "?next=" + reverse(NOTES_ADD)
+        )
 
         note = Note.objects.create(
             title="Test Note", text="Test Note content", author=self.user
@@ -69,23 +82,38 @@ class RoutesTest(TestCase):
         response = self.client.get(
             reverse("notes:detail", kwargs={"slug": note.slug})
         )
-        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(
+            response,
+            expected_url
+            + "?next="
+            + reverse("notes:detail", kwargs={"slug": note.slug}),
+        )
 
         response = self.client.get(
-            reverse("notes:edit", kwargs={"slug": note.slug})
+            reverse(NOTES_EDIT, kwargs={"slug": note.slug})
         )
-        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(
+            response,
+            expected_url
+            + "?next="
+            + reverse(NOTES_EDIT, kwargs={"slug": note.slug}),
+        )
 
         response = self.client.get(
-            reverse("notes:delete", kwargs={"slug": note.slug})
+            reverse(NOTES_DELETE, kwargs={"slug": note.slug})
         )
-        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(
+            response,
+            expected_url
+            + "?next="
+            + reverse(NOTES_DELETE, kwargs={"slug": note.slug}),
+        )
 
     def test_auth_pages_access(self):
         response = self.client.get(reverse("users:signup"))
         self.assertEqual(response.status_code, 200)
 
-        response = self.client.get(reverse("users:login"))
+        response = self.client.get(reverse(USERS_LOGIN))
         self.assertEqual(response.status_code, 200)
 
         response = self.client.get(reverse("users:logout"))

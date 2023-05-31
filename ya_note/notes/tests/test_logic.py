@@ -10,6 +10,11 @@ User = get_user_model()
 
 
 class LogicTest(TestCase):
+    NOTES_ADD = "notes:add"
+    NOTES_EDIT = "notes:edit"
+    NOTES_DELETE = "notes:delete"
+    USERS_LOGIN = "users:login"
+
     def setUp(self):
         self.client = Client()
         self.user1 = User.objects.create_user(
@@ -23,20 +28,27 @@ class LogicTest(TestCase):
         self.client.login(username="testuser1", password="12345")
         note_data = {"title": "Test Note", "text": "Test Note content"}
 
+        initial_count = Note.objects.count()
         response = self.client.post(
-            reverse("notes:add"), data=note_data, follow=True
+            reverse(self.NOTES_ADD), data=note_data, follow=True
         )
+
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(Note.objects.count(), 1)
+        self.assertEqual(Note.objects.count(), initial_count + 1)
+        note = Note.objects.first()
+        self.assertEqual(note.title, note_data["title"])
+        self.assertEqual(note.text, note_data["text"])
 
     def test_anonymous_user_cannot_create_note(self):
         note_data = {"title": "Test Note", "text": "Test Note content"}
 
         response = self.client.post(
-            reverse("notes:add"), data=note_data, follow=True
+            reverse(self.NOTES_ADD), data=note_data, follow=True
         )
+
         self.assertRedirects(
-            response, reverse("users:login") + "?next=" + reverse("notes:add")
+            response,
+            reverse(self.USERS_LOGIN) + "?next=" + reverse(self.NOTES_ADD),
         )
 
     def test_cannot_create_two_notes_with_same_slug(self):
@@ -48,13 +60,13 @@ class LogicTest(TestCase):
         }
 
         response = self.client.post(
-            reverse("notes:add"), data=note_data, follow=True
+            reverse(self.NOTES_ADD), data=note_data, follow=True
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(Note.objects.count(), 1)
 
         response = self.client.post(
-            reverse("notes:add"), data=note_data, follow=True
+            reverse(self.NOTES_ADD), data=note_data, follow=True
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(Note.objects.count(), 1)
@@ -64,7 +76,7 @@ class LogicTest(TestCase):
         note_data = {"title": "Test Note", "text": "Test Note content"}
 
         response = self.client.post(
-            reverse("notes:add"), data=note_data, follow=True
+            reverse(self.NOTES_ADD), data=note_data, follow=True
         )
         self.assertEqual(response.status_code, 200)
         note = Note.objects.first()
@@ -77,18 +89,20 @@ class LogicTest(TestCase):
         )
 
         note_data = {"title": "Updated Note", "text": "Updated content"}
+
         response = self.client.post(
-            reverse("notes:edit", kwargs={"slug": note.slug}),
+            reverse(self.NOTES_EDIT, kwargs={"slug": note.slug}),
             data=note_data,
             follow=True,
         )
+
         note.refresh_from_db()
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(note.title, "Updated Note")
-        self.assertEqual(note.text, "Updated content")
+        self.assertEqual(note.title, note_data["title"])
+        self.assertEqual(note.text, note_data["text"])
 
         response = self.client.post(
-            reverse("notes:delete", kwargs={"slug": note.slug}), follow=True
+            reverse(self.NOTES_DELETE, kwargs={"slug": note.slug}), follow=True
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(Note.objects.count(), 0)
@@ -101,17 +115,18 @@ class LogicTest(TestCase):
 
         note_data = {"title": "Updated Note", "text": "Updated content"}
         response = self.client.post(
-            reverse("notes:edit", kwargs={"slug": note.slug}),
+            reverse(self.NOTES_EDIT, kwargs={"slug": note.slug}),
             data=note_data,
             follow=True,
         )
+
         self.assertEqual(response.status_code, 404)
         note.refresh_from_db()
         self.assertEqual(note.title, "Test Note")
         self.assertEqual(note.text, "Test Note content")
 
         response = self.client.post(
-            reverse("notes:delete", kwargs={"slug": note.slug}), follow=True
+            reverse(self.NOTES_DELETE, kwargs={"slug": note.slug}), follow=True
         )
         self.assertEqual(response.status_code, 404)
         self.assertEqual(Note.objects.count(), 1)
