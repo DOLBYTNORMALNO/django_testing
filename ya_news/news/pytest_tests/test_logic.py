@@ -7,31 +7,30 @@ from django.contrib.auth.models import User
 from news.models import News, Comment
 from news.forms import BAD_WORDS
 
-NEWS_EDIT = 'news:edit'
-NEWS_DELETE = 'news:delete'
-NEWS_DETAIL = 'news:detail'
-
+NEWS_EDIT = "news:edit"
+NEWS_DELETE = "news:delete"
+NEWS_DETAIL = "news:detail"
 
 
 @pytest.fixture
 def user_fixture(db):
-    return User.objects.create_user(username='testuser', password='12345')
+    return User.objects.create_user(username="testuser", password="12345")
 
 
 @pytest.fixture
 def another_user_fixture(db):
-    return User.objects.create_user(username='testuser2', password='12345')
+    return User.objects.create_user(username="testuser2", password="12345")
 
 
 @pytest.fixture
 def news_fixture(db):
-    return News.objects.create(title='Test News', text='Test News content')
+    return News.objects.create(title="Test News", text="Test News content")
 
 
 @pytest.fixture
 def comment_fixture(db, news_fixture, user_fixture):
     return Comment.objects.create(
-        news=news_fixture, author=user_fixture, text='Test Comment'
+        news=news_fixture, author=user_fixture, text="Test Comment"
     )
 
 
@@ -39,8 +38,8 @@ def comment_fixture(db, news_fixture, user_fixture):
 def test_anonymous_user_cannot_comment(client, news_fixture):
     comment_count = Comment.objects.count()
     response = client.post(
-        reverse(NEWS_DETAIL, kwargs={'pk': news_fixture.pk}),
-        data={'text': 'Test Comment'},
+        reverse(NEWS_DETAIL, kwargs={"pk": news_fixture.pk}),
+        data={"text": "Test Comment"},
     )
     assert response.status_code == 302
     assert Comment.objects.count() == comment_count
@@ -48,10 +47,10 @@ def test_anonymous_user_cannot_comment(client, news_fixture):
 
 @pytest.mark.django_db
 def test_authorized_user_can_comment(client, user_fixture, news_fixture):
-    client.login(username=user_fixture.username, password='12345')
+    client.login(username=user_fixture.username, password="12345")
     response = client.post(
-        reverse(NEWS_DETAIL, kwargs={'pk': news_fixture.pk}),
-        data={'text': 'Test Comment'},
+        reverse(NEWS_DETAIL, kwargs={"pk": news_fixture.pk}),
+        data={"text": "Test Comment"},
     )
     assert response.status_code == 302
     assert Comment.objects.count() == 1
@@ -61,11 +60,11 @@ def test_authorized_user_can_comment(client, user_fixture, news_fixture):
 def test_comment_with_forbidden_words_not_published(
     client, user_fixture, news_fixture
 ):
-    client.login(username=user_fixture.username, password='12345')
+    client.login(username=user_fixture.username, password="12345")
     response = client.post(
-        reverse(NEWS_DETAIL, kwargs={'pk': news_fixture.pk}),
+        reverse(NEWS_DETAIL, kwargs={"pk": news_fixture.pk}),
         data={
-            'text': f'Test Comment with forbidden word { random.choice(BAD_WORDS)}'
+            "text": f"Test Comment with forbidden word { random.choice(BAD_WORDS)}"
         },
     )
     assert response.status_code == 200
@@ -79,11 +78,11 @@ def test_comment_with_forbidden_words_not_published(
 def test_authorized_user_can_edit_own_comment(
     client, user_fixture, comment_fixture
 ):
-    client.login(username=user_fixture.username, password='12345')
-    new_comment_text = 'Updated Comment'
+    client.login(username=user_fixture.username, password="12345")
+    new_comment_text = "Updated Comment"
     client.post(
-        reverse(NEWS_EDIT, kwargs={'pk': comment_fixture.pk}),
-        data={'text': new_comment_text},
+        reverse(NEWS_EDIT, kwargs={"pk": comment_fixture.pk}),
+        data={"text": new_comment_text},
     )
     comment_fixture.refresh_from_db()
     assert comment_fixture.text == new_comment_text
@@ -93,11 +92,11 @@ def test_authorized_user_can_edit_own_comment(
 def test_authorized_user_cannot_edit_others_comments(
     client, user_fixture, another_user_fixture, comment_fixture
 ):
-    client.login(username=another_user_fixture.username, password='12345')
-    new_comment_text = 'Unauthorized Update Attempt'
+    client.login(username=another_user_fixture.username, password="12345")
+    new_comment_text = "Unauthorized Update Attempt"
     client.post(
-        reverse(NEWS_EDIT, kwargs={'pk': comment_fixture.pk}),
-        data={'text': new_comment_text},
+        reverse(NEWS_EDIT, kwargs={"pk": comment_fixture.pk}),
+        data={"text": new_comment_text},
     )
     comment_fixture.refresh_from_db()
     assert comment_fixture.text != new_comment_text
@@ -107,7 +106,7 @@ def test_authorized_user_cannot_edit_others_comments(
 def test_authorized_user_cannot_delete_others_comments(
     client, user_fixture, another_user_fixture, comment_fixture
 ):
-    client.login(username=another_user_fixture.username, password='12345')
+    client.login(username=another_user_fixture.username, password="12345")
     initial_count = Comment.objects.count()
-    client.post(reverse(NEWS_DELETE, kwargs={'pk': comment_fixture.pk}))
+    client.post(reverse(NEWS_DELETE, kwargs={"pk": comment_fixture.pk}))
     assert Comment.objects.count() == initial_count
