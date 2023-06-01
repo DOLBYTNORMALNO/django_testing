@@ -1,8 +1,10 @@
 import pytest
-from django.urls import reverse
-from django.contrib.auth.models import User
-from news.models import News, Comment
+
 from django.conf import settings
+from django.contrib.auth.models import User
+from django.urls import reverse
+
+from news.models import News, Comment
 
 
 NEWS_HOME = "news:home"

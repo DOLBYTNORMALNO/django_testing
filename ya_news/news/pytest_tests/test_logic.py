@@ -5,7 +5,7 @@ from django.urls import reverse
 from django.contrib.auth.models import User
 
 from news.models import News, Comment
-from news.forms import BAD_WORDS
+from news.forms import BAD_WORDS, CommentForm, WARNING
 
 NEWS_EDIT = "news:edit"
 NEWS_DELETE = "news:delete"
@@ -61,17 +61,16 @@ def test_comment_with_forbidden_words_not_published(
     client, user_fixture, news_fixture
 ):
     client.login(username=user_fixture.username, password="12345")
+    bad_word = random.choice(BAD_WORDS)
     response = client.post(
         reverse(NEWS_DETAIL, kwargs={"pk": news_fixture.pk}),
-        data={
-            "text": f"Test Comment with { random.choice(BAD_WORDS)}"
-        },
+        data={"text": f"Test Comment with {bad_word}"},
     )
     assert response.status_code == 200
-    # Здесь почему то тесты задания работают диаметрально противоположно,
-    # при нахождении запретного слова требуют вывод 200,
-    # а при добавлении not требуют 302, но никак не 403, не понимаю, что не так
     assert Comment.objects.count() == 0
+    form = response.context["form"]
+    assert form.errors
+    assert WARNING in form.errors["text"]
 
 
 @pytest.mark.django_db
