@@ -5,7 +5,7 @@ from django.urls import reverse
 from django.contrib.auth.models import User
 
 from news.models import News, Comment
-from news.forms import BAD_WORDS, CommentForm, WARNING
+from news.forms import BAD_WORDS, WARNING
 
 NEWS_EDIT = "news:edit"
 NEWS_DELETE = "news:delete"
