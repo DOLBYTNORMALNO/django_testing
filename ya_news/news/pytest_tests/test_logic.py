@@ -48,12 +48,13 @@ def test_anonymous_user_cannot_comment(client, news_fixture):
 @pytest.mark.django_db
 def test_authorized_user_can_comment(client, user_fixture, news_fixture):
     client.login(username=user_fixture.username, password="12345")
+    comment_count = Comment.objects.count()
     response = client.post(
         reverse(NEWS_DETAIL, kwargs={"pk": news_fixture.pk}),
         data={"text": "Test Comment"},
     )
     assert response.status_code == 302
-    assert Comment.objects.count() == 1
+    assert Comment.objects.count() == comment_count + 1
 
 
 @pytest.mark.django_db

@@ -6,8 +6,6 @@ from notes.models import Note
 
 
 User = get_user_model()
-# Но в settings нет никакого AUTH_USER_MODE,
-# что имеется ввиду?
 
 
 class ContentTest(TestCase):
